@@ -21,14 +21,15 @@ contract CrystalDN404 is DN404, Ownable {
     constructor(
         string memory name_,
         string memory symbol_,
+        string memory baseURI_,
         uint256 unit,
-        uint96 initialNFTSupply,
-        address owner
+        uint96 initialNFTSupply
     ) {
-        _initializeOwner(owner);
+        _initializeOwner(msg.sender);
 
         _name = name_;
         _symbol = symbol_;
+        _baseURI = baseURI_;
         _tokensInNFT = unit;
 
         address mirror = address(new DN404Mirror(msg.sender));

@@ -1,5 +1,11 @@
 {
   "name": "dn404",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "local_node": "npx hardhat node",
+    "deploy_local": "npx hardhat run --network localhost script/deploy.js",
+    "deploy_sepolia": "npx hardhat run --network sepolia script/deploy.js"
+  },
   "license": "MIT",
   "version": "0.0.13",
   "description": "Implementation of a co-joined ERC20 and ERC721 pair.",
@@ -12,6 +18,8 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.5",
+    "dotenv": "^16.4.5"
   }
 }
