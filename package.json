@@ -9,5 +9,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vectorized/dn404.git"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
   }
 }
