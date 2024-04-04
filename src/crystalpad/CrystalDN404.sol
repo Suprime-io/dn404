@@ -33,7 +33,11 @@ contract CrystalDN404 is DN404, Ownable {
         _tokensInNFT = unit;
 
         address mirror = address(new DN404Mirror(msg.sender));
-        _initializeDN404(unit * initialNFTSupply, msg.sender, mirror);
+
+        _initializeDN404(0, msg.sender, mirror);
+        _setSkipNFT(msg.sender, false);
+        //mint both parts
+        _mint(msg.sender, unit * initialNFTSupply);
     }
 
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
@@ -57,6 +61,13 @@ contract CrystalDN404 is DN404, Ownable {
     /// @dev Amount of token balance that is equal to one NFT.
     function _unit() internal view override returns (uint256) {
         return _tokensInNFT;
+    }
+
+    /// @dev Will mint/transfer NFTs for 'to', even if contract, or flag set to 'false'
+    /// at extra gas costs
+    function _transfer(address from, address to, uint256 amount) internal override{
+        if (getSkipNFT(to)) _setSkipNFT(to, false);
+        super._transfer(from, to, amount);
     }
 
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
