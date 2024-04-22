@@ -7,6 +7,14 @@ import {DN404Mirror} from "../src/DN404Mirror.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {LibSort} from "solady/utils/LibSort.sol";
 
+library DN404MirrorTransferEmitter {
+    event Transfer(address indexed from, address indexed to, uint256 indexed id);
+
+    function emitTransfer(address from, address to, uint256 id) internal {
+        emit Transfer(from, to, id);
+    }
+}
+
 contract DN404Test is SoladyTest {
     uint256 private constant _WAD = 1000000000000000000;
 
@@ -32,7 +40,9 @@ contract DN404Test is SoladyTest {
     function testTokenURI(string memory baseURI, uint256 id) public {
         dn.initializeDN404(1000 * _WAD, address(this), address(mirror));
         dn.setBaseURI(baseURI);
-        assertEq(mirror.tokenURI(id), string(abi.encodePacked(baseURI, id)));
+        string memory expected = string(abi.encodePacked(baseURI, id));
+        assertEq(DN404Mirror(payable(address(dn))).tokenURI(id), expected);
+        assertEq(mirror.tokenURI(id), expected);
     }
 
     function testRegisterAndResolveAlias(address a0, address a1) public {
@@ -262,6 +272,24 @@ contract DN404Test is SoladyTest {
         vm.prank(initialSupplyOwner);
         dn.transfer(alice, 1 * _WAD);
         assertEq(mirror.ownerAt(1), alice);
+    }
+
+    function testTransferWithMirrorEvent() public {
+        address initialSupplyOwner = address(1111);
+        address alice = address(111);
+        address bob = address(222);
+
+        dn.initializeDN404(10 * _WAD, initialSupplyOwner, address(mirror));
+
+        vm.prank(initialSupplyOwner);
+        dn.transfer(alice, 10 * _WAD);
+
+        vm.expectEmit(true, true, true, true, address(mirror));
+        DN404MirrorTransferEmitter.emitTransfer(alice, bob, 3);
+        vm.prank(alice);
+        dn.initiateTransferFromNFT(alice, bob, 3);
+
+        assertEq(mirror.ownerAt(3), bob);
     }
 
     function testMixed(uint256) public {

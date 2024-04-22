@@ -312,8 +312,10 @@ abstract contract DN404 {
     /*                      ERC20 OPERATIONS                      */
     /*-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»-»*/
 
-    /// @dev Returns the decimals places of the token. Always 18.
-    function decimals() public pure returns (uint8) {
+    /// @dev Returns the decimals places of the token. Defaults to 18.
+    /// Does not affect DN404's internal calculations.
+    /// Will only affect the frontend UI on most protocols.
+    function decimals() public view virtual returns (uint8) {
         return 18;
     }
 
@@ -780,6 +782,29 @@ abstract contract DN404 {
     }
 
     /// @dev Transfers token `id` from `from` to `to`.
+    /// Also emits an ERC721 {Transfer} event on the `mirrorERC721`.
+    ///
+    /// Requirements:
+    ///
+    /// - Call must originate from the mirror contract.
+    /// - Token `id` must exist.
+    /// - `from` must be the owner of the token.
+    /// - `to` cannot be the zero address.
+    ///   `msgSender` must be the owner of the token, or be approved to manage the token.
+    ///
+    /// Emits a {Transfer} event.
+    function _initiateTransferFromNFT(address from, address to, uint256 id, address msgSender)
+        internal
+        virtual
+    {
+        _transferFromNFT(from, to, id, msgSender);
+        // Emit ERC721 {Transfer} event.
+        _DNDirectLogs memory directLogs = _directLogsMalloc(1, from, to);
+        _directLogsAppend(directLogs, id);
+        _directLogsSend(directLogs, _getDN404Storage().mirrorERC721);
+    }
+
+    /// @dev Transfers token `id` from `from` to `to`.
     ///
     /// Requirements:
     ///
@@ -1153,9 +1178,11 @@ abstract contract DN404 {
             /// @solidity memory-safe-assembly
             assembly {
                 // Memory safe, as we've advanced the free memory pointer by a word.
-                let o := sub(uri, 0x20)
+                let o := sub(uri, 0x20) // Start of the returndata.
+                let z := add(mload(uri), 0x40) // Unpadded length of returndata.
+                mstore(add(o, z), 0) // Zeroize the word after the end of the string.
                 mstore(o, 0x20) // Store the offset of `uri`.
-                return(o, add(0x60, mload(uri)))
+                return(o, and(not(0x1f), add(0x1f, z)))
             }
         }
         // `implementsDN404()`.
@@ -1280,11 +1307,15 @@ abstract contract DN404 {
             }
             if negBits {
                 // Find-first-set routine.
+                // From: https://github.com/vectorized/solady/blob/main/src/utils/LibBit.sol
                 let b := and(negBits, add(not(negBits), 1)) // Isolate the least significant bit.
-                let r := shl(7, lt(0xffffffffffffffffffffffffffffffff, b))
-                r := or(r, shl(6, lt(0xffffffffffffffff, shr(r, b))))
-                r := or(r, shl(5, lt(0xffffffff, shr(r, b))))
-                // For the remaining 32 bits, use a De Bruijn lookup.
+                // For the upper 3 bits of the result, use a De Bruijn-like lookup.
+                // Credit to adhusson: https://blog.adhusson.com/cheap-find-first-set-evm/
+                // forgefmt: disable-next-item
+                let r := shl(5, shr(252, shl(shl(2, shr(250, mul(b,
+                    0x2aaaaaaaba69a69a6db6db6db2cb2cb2ce739ce73def7bdeffffffff))),
+                    0x1412563212c14164235266736f7425221143267a45243675267677)))
+                // For the lower 5 bits of the result, use a De Bruijn lookup.
                 // forgefmt: disable-next-item
                 r := or(r, byte(and(div(0xd76453e0, shr(r, b)), 0x1f),
                     0x001f0d1e100c1d070f090b19131c1706010e11080a1a141802121b1503160405))
