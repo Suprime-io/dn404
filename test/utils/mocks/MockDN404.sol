@@ -12,7 +12,7 @@ contract MockDN404 is DN404 {
 
     bool addToBurnedPool;
 
-    bool useDirectTransfersIfPossible;
+    bool public useDirectTransfersIfPossible;
 
     bool givePermit2DefaultInfiniteAllowance;
 
@@ -40,7 +40,12 @@ contract MockDN404 is DN404 {
     }
 
     function registerAndResolveAlias(address target) public returns (uint32) {
-        return _registerAndResolveAlias(_addressData(target), target);
+        return _registerAndResolveAlias(_getDN404Storage().addressData[target], target);
+    }
+
+    function getAddressDataSkipNFTInitialized(address target) public view returns (bool) {
+        return _getDN404Storage().addressData[target].flags
+            & _ADDRESS_DATA_SKIP_NFT_INITIALIZED_FLAG != 0;
     }
 
     function mint(address to, uint256 amount) public {
@@ -61,10 +66,6 @@ contract MockDN404 is DN404 {
         address mirrorNFTContract
     ) public {
         _initializeDN404(initialTokenSupply, initialSupplyOwner, mirrorNFTContract);
-    }
-
-    function getAddressDataInitialized(address target) public view returns (bool) {
-        return _getDN404Storage().addressData[target].flags & _ADDRESS_DATA_INITIALIZED_FLAG != 0;
     }
 
     function setAux(address target, uint88 value) public {
@@ -103,8 +104,9 @@ contract MockDN404 is DN404 {
             uint256 id = _get($.owned[owner], i);
             result[i] = id;
             // Check invariants.
-            require(_ownerAt(id) == owner);
-            require(_get($.oo, _ownedIndex(id)) == i);
+            require(_ownerAt(id) == owner, "ownerAt != owner");
+            require(_get($.oo, _ownedIndex(id)) == i, "ownedIndex != i");
+            if (useExistsLookup) require(_get($.exists, id), "id not in exists bitmap");
         }
     }
 
@@ -169,12 +171,71 @@ contract MockDN404 is DN404 {
         }
     }
 
-    function _afterNFTTransfer(address from, address to, uint256 id) internal virtual override {
-        /// @solidity memory-safe-assembly
-        assembly {
-            mstore(0x00, from)
-            mstore(0x20, to)
-            mstore(0x10, id)
+    function _useAfterNFTTransfers() internal view virtual override returns (bool) {
+        return true;
+    }
+
+    function _afterNFTTransfers(address[] memory from, address[] memory to, uint256[] memory ids)
+        internal
+        virtual
+        override
+    {
+        uint256 n = ids.length;
+        require(from.length == n);
+        require(to.length == n);
+        unchecked {
+            for (uint256 i; i != n; ++i) {
+                uint256 id = ids[i];
+                require(id <= 2 ** 32 - 1);
+                if (from[i] != address(0) && to[i] != address(0)) {
+                    require(_ownerAt(id) == to[i]);
+                }
+                if (from[i] == address(0)) {
+                    require(to[i] != address(0));
+                    require(_ownerAt(id) == to[i]);
+                }
+                if (to[i] == address(0)) {
+                    require(from[i] != address(0));
+                    bool hasRemint = false;
+                    for (uint256 j = i + 1; j < n; ++j) {
+                        if (ids[j] == id && to[j] != address(0)) {
+                            hasRemint = true;
+                            j = n;
+                        }
+                    }
+                    if (!hasRemint) {
+                        require(_ownerAt(id) == address(0));
+                    }
+                }
+            }
         }
+    }
+
+    function burnedPool() public view returns (uint256[] memory result) {
+        unchecked {
+            DN404Storage storage $ = _getDN404Storage();
+            uint32 start = $.burnedPoolHead;
+            uint32 end = $.burnedPoolTail;
+            result = new uint256[](end > start ? end - start : start - end);
+            uint256 i;
+            while (start != end) {
+                result[i] = _get($.burnedPool, start);
+                ++start;
+                ++i;
+            }
+        }
+    }
+
+    function burnedPoolHeadTail() public view returns (uint256, uint256) {
+        DN404Storage storage $ = _getDN404Storage();
+        return ($.burnedPoolHead, $.burnedPoolTail);
+    }
+
+    function balanceOfNFT(address owner) public view returns (uint256) {
+        return _balanceOfNFT(owner);
+    }
+
+    function getApproved(uint256 id) public view returns (address) {
+        return _getApproved(id);
     }
 }
