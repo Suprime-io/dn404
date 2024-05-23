@@ -10,6 +10,7 @@ async function main() {
     '',
     hre.ethers.parseEther('10000'),   // 'tokens' in one NFT
     '22',                                    // total NFTs minted
+    true,
   ];
   const crystalDN404 = await hre.ethers.deployContract("CrystalDN404", tokenArgs);
   await crystalDN404.waitForDeployment();

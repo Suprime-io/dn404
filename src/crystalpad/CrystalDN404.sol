@@ -23,7 +23,8 @@ contract CrystalDN404 is DN404, Ownable {
         string memory symbol_,
         string memory baseURI_,
         uint256 unit,
-        uint96 initialNFTSupply
+        uint96 initialNFTSupply,
+        bool instantMint
     ) {
         _initializeOwner(msg.sender);
 
@@ -34,10 +35,14 @@ contract CrystalDN404 is DN404, Ownable {
 
         address mirror = address(new DN404Mirror(msg.sender));
 
-        _initializeDN404(0, msg.sender, mirror);
-        _setSkipNFT(msg.sender, false);
-        //mint both parts
-        _mint(msg.sender, unit * initialNFTSupply);
+         if (instantMint) {
+            _initializeDN404(0, msg.sender, mirror);
+            _setSkipNFT(msg.sender, false);
+            //mint both parts
+            _mint(msg.sender, unit * initialNFTSupply);
+         } else {
+             _initializeDN404(unit * initialNFTSupply, msg.sender, mirror);
+         }
     }
 
     /*«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-«-*/
