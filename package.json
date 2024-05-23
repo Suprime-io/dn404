@@ -7,7 +7,7 @@
     "deploy_sepolia": "npx hardhat run --network sepolia script/deploy.js"
   },
   "license": "MIT",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Implementation of a co-joined ERC20 and ERC721 pair.",
   "files": [
     "src/**/*.sol"
