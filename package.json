@@ -4,7 +4,8 @@
     "compile": "npx hardhat compile",
     "local_node": "npx hardhat node",
     "deploy_local": "npx hardhat run --network localhost script/deploy.js",
-    "deploy_sepolia": "npx hardhat run --network sepolia script/deploy.js"
+    "deploy_sepolia": "npx hardhat run --network sepolia script/deploy.js",
+    "deploy_base": "npx hardhat run --network base script/deploy.js"
   },
   "license": "MIT",
   "version": "0.0.18",
@@ -19,7 +20,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@nomicfoundation/hardhat-verify": "^2.0.5",
+    "@nomicfoundation/hardhat-verify": "^2.0.7",
     "dotenv": "^16.4.5"
   }
 }

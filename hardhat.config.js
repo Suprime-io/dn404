@@ -13,7 +13,10 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      base: process.env.BASESCAN_API_KEY
+    },
   },
   sourcify: {
     enabled: false
@@ -24,6 +27,10 @@ module.exports = {
     },
     sepolia: {
       url: `https://sepolia.gateway.tenderly.co/${process.env.TENDERLY_API_KEY}`,
+      accounts: [process.env.SEPOLIA_PRIVATE_KEY],
+    },
+    base: {
+      url: `https://base.gateway.tenderly.co/${process.env.TENDERLY_API_KEY}`,
       accounts: [process.env.SEPOLIA_PRIVATE_KEY],
     },
     mainnet: {

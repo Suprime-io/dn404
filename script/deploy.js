@@ -24,10 +24,14 @@ async function main() {
 
   //verify
   if (hre.network.name !== 'localhost') {
+    console.log('Waiting before verification....')
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+    await delay(10000);
     await hre.run("verify:verify", {
       address: crystalDN404.target,
       constructorArguments: tokenArgs,
     });
+    // npx hardhat verify --network sepolia ADDRESS  "CRYSTALPAD DN404 Token" "CRYSTALPAD_DN404" "" "10000000000000000000000" "22" "true"
     await hre.run("verify:verify", {
       address: crystalDN404MirrorAddress,
       constructorArguments: [initializer.address],
