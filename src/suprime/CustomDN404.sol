@@ -8,11 +8,11 @@ import {LibString} from "solady/utils/LibString.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /**
- * @title CrystalDN404
+ * @title CustomDN404.sol
  * @notice Based on https://github.com/Vectorized/dn404
  * Highly configurable ERC404
  */
-contract CrystalDN404 is DN404, Ownable {
+contract CustomDN404 is DN404, Ownable {
     string private _name;
     string private _symbol;
     string private _baseURI;

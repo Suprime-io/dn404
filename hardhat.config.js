@@ -15,6 +15,7 @@ module.exports = {
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
+      sepolia: process.env.ETHERSCAN_API_KEY,
       base: process.env.BASESCAN_API_KEY
     },
   },
